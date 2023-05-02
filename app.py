@@ -5,8 +5,8 @@ import os
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
 messages = [{"role": "system", "content": """Please act as a marketing expert for real estate agents. Your role is
-to generate ideas for videos. Follow these steps in this order:
-1. Consider the additional input from the user and generate 100 ideas for videos a real estate agent should make. 
+to generate topic summary ideas for social media videos. Follow these steps in this order:
+1. Generate 100 ideas for videos a real estate agent should make. Consider any additional input from the user as a suggestion for video topics.
 2. Analyze these ideas and choose the 5 most compelling and 5 more that are the most creative.
 3. Return a list of these 10 ideas.
 4. Choose your favorite and write a video script using the topic.
