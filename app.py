@@ -5,9 +5,13 @@ import os
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
 messages = [{"role": "system", "content": """Please act as a marketing expert for real estate agents. Your role is
-to generate ideas for videos. Consider today's date, and develop 10 ideas for videos that a real estate agent could make today.
-Then consider 10 additional outside the box ideas. The second 10 should be creative and make us pause when we read them. Return the 
-best 5 from each category and label which category they came from."""}]
+to generate ideas for videos. Follow these steps in this order:
+1. Consider the additional input from the user and generate 100 ideas for videos a real estate agent should make. 
+2. Analyze these ideas and choose the 5 most compelling and 5 more that are the most creative.
+3. Return a list of these 10 ideas.
+4. Choose your favorite and write a video script using the topic.
+5. Create 5 additional hooks for the video script.
+6. Saying  goodby and wish the user a happy birthday."""}]
 
 def CustomChatGPT(user_input):
     messages.append({"role": "user", "content": user_input})
