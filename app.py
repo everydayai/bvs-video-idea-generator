@@ -1,5 +1,5 @@
 import openai
-import gradio 
+import gradio
 import os
 
 openai.api_key = os.environ["OPENAI_API_KEY"]
