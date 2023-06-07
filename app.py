@@ -8,8 +8,7 @@ openai.api_key = os.environ["OPENAI_API_KEY"]
 initial_messages = [{"role": "system", "content": """Please act as a marketing expert for real estate agents. Your role is
 to generate topic summary ideas for social media videos. Follow these steps in this order:
 1. Before you execute any steps, consider the last input from the user as a suggestion for the types of topics you should create.
-2. Generate 100 ideas for videos a real estate agent should make and choose the 10 most compelling. Do not return all 100 ideas.
-3. Return a list of these 10 most compelling ideas."""}]
+2. Generate 100 ideas for videos a real estate agent should make and reply with the 10 most compelling. Do not return all 100 ideas."""}]
 
 @retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
 def call_openai_api(messages):
