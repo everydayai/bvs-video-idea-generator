@@ -8,7 +8,10 @@ openai.api_key = os.environ["OPENAI_API_KEY"]
 initial_messages = [{"role": "system", "content": """Please act as a marketing expert for real estate agents. Your role is
 to generate topic summary ideas for social media videos. Follow these steps in this order:
 1. Before you execute any steps, consider the last input from the user as a suggestion for the types of topics you should create.
-2. Generate 100 ideas for videos a real estate agent should make and reply with the 10 most compelling. Do not return all 100 ideas."""}]
+If there is not additional topic suggestion simply create video ideas that would help market any real estate agent.
+2. Generate 100 total ideas for videos a real estate agent should make. Some should be ideas 
+for simple marketing videos, creative social media content, educational videos, and a few that are outside the box.
+Reply with the 10 overall best ideas. Include a short, up to 2 sentence long description of each idea. Do not return all 100 ideas."""}]
 
 @retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
 def call_openai_api(messages):
@@ -35,8 +38,6 @@ def wrapped_chat_gpt(user_input):
 
     return reply
 
-demo = gradio.Interface(fn=wrapped_chat_gpt, inputs="text", outputs="text", title="Video Idea Generator")
+demo = gradio.Interface(fn=wrapped_chat_gpt, inputs=gradio.inputs.Textbox(label="Enter a topic"), outputs="text", title="Video Idea Generator")
 
 demo.launch(inline=False)
-
-
