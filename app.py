@@ -1,10 +1,12 @@
 import openai
-import gradio
 import os
+import streamlit as st
 from tenacity import retry, wait_fixed, stop_after_attempt
 
+# Set OpenAI API key from environment variables
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
+# Define the initial system message
 initial_messages = [{"role": "system", "content": """Please act as a marketing expert for real estate agents. Your role is
 to generate topic summary ideas for social media videos. Follow these steps in this order:
 1. Before you execute any steps, consider the last input from the user as a suggestion for the types of topics you should create if
@@ -27,17 +29,15 @@ def CustomChatGPT(user_input, messages):
     messages.append({"role": "assistant", "content": ChatGPT_reply})
     return ChatGPT_reply, messages
 
-def wrapped_chat_gpt(user_input):
-    # Replace the following line with your method to retrieve the messages list for the current user
+# Streamlit app setup
+st.title("Video Idea Generator for Real Estate Agents")
+st.write("Enter a topic suggestion or leave it blank for general video ideas.")
+
+user_input = st.text_input("Enter a topic:")
+generate_button = st.button("Generate Ideas")
+
+if generate_button:
     messages = initial_messages.copy()
-
-    reply, updated_messages = CustomChatGPT(user_input, messages)
-
-    # Replace the following line with your method to store the updated messages list for the current user
-    # Store updated_messages
-
-    return reply
-
-demo = gradio.Interface(fn=wrapped_chat_gpt, inputs=gradio.inputs.Textbox(label="Enter a topic"), outputs="text", title="Video Idea Generator")
-
-demo.launch(inline=False)
+    reply, _ = CustomChatGPT(user_input, messages)
+    st.write("Here are the top video ideas:")
+    st.write(reply)
