@@ -1,3 +1,14 @@
+---
+title: Video Idea Generator for Real Estate
+emoji: 🎥
+colorFrom: pink
+colorTo: pink
+sdk: streamlit
+sdk_version: "1.25.0"  # Replace with the Streamlit version you're using
+app_file: app.py
+pinned: false
+---
+
 # Video Idea Generator for Real Estate Agents ⚡️
 
 This tool generates unique video ideas for real estate agents to use on social media and other marketing channels. Powered by OpenAI, the app provides a curated list of creative, educational, and outside-the-box video ideas to help agents improve their engagement and reach potential clients.
