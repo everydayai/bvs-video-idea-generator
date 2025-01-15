@@ -65,3 +65,26 @@ if generate_button:
     except Exception as e:
         st.error("An unexpected error occurred. Please try again.")
 
+@retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
+def call_openai_api(messages):
+    """
+    Call OpenAI's ChatCompletion API with retries for transient errors.
+    """
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=messages,
+            max_tokens=1000  # Adjust token limit
+        )
+        return response
+    except openai.error.AuthenticationError:
+        st.error("Invalid API key. Please check your configuration.")
+        raise
+    except openai.error.RateLimitError:
+        st.error("Rate limit exceeded. Please wait and try again.")
+        raise
+    except openai.error.OpenAIError as e:
+        st.error(f"OpenAI API Error: {e}")
+        raise
+
+
