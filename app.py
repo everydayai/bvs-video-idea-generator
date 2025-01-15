@@ -1,10 +1,10 @@
-import openai
 import os
+from openai import OpenAI
 import streamlit as st
 from tenacity import retry, wait_fixed, stop_after_attempt
 
-# Access OpenAI API key from environment variables
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# Initialize OpenAI client
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Define the initial system message
 initial_messages = [{
@@ -24,23 +24,14 @@ def call_openai_api(messages):
     Call OpenAI's ChatCompletion API with retries for transient errors.
     """
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4",
             messages=messages,
-            max_tokens=1000  # Adjust token limit to fit your needs
+            max_tokens=1000
         )
         return response
-    except openai.error.AuthenticationError as e:
-        st.error("Invalid API key. Please check your configuration.")
-        raise
-    except openai.error.RateLimitError as e:
-        st.error("Rate limit exceeded. Please wait and try again.")
-        raise
-    except openai.error.OpenAIError as e:
-        st.error(f"OpenAI API Error: {e}")
-        raise
     except Exception as e:
-        st.error(f"Unexpected Error: {e}")
+        st.error(f"OpenAI API Error: {str(e)}")
         raise
 
 def CustomChatGPT(user_input, messages):
@@ -53,7 +44,7 @@ def CustomChatGPT(user_input, messages):
         messages.append({"role": "user", "content": "Please generate general video ideas for a real estate agent."})
     
     response = call_openai_api(messages)
-    ChatGPT_reply = response["choices"][0]["message"]["content"]
+    ChatGPT_reply = response.choices[0].message.content
     messages.append({"role": "assistant", "content": ChatGPT_reply})
     return ChatGPT_reply, messages
 
@@ -69,7 +60,7 @@ if st.button("Generate Video Ideas"):
     messages = initial_messages.copy()
     try:
         with st.spinner("Generating video ideas..."):
-            reply, messages = CustomChatGPT(user_input, messages)  # Fixed unpacking
+            reply, messages = CustomChatGPT(user_input, messages)
         st.markdown("### Suggested Video Ideas")
         st.write(reply)
     except Exception as e:
