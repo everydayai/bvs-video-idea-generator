@@ -2,6 +2,10 @@ import openai
 import os
 import streamlit as st
 from tenacity import retry, wait_fixed, stop_after_attempt
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
 
 # Set OpenAI API key from environment variables
 openai.api_key = os.getenv("OPENAI_API_KEY")
@@ -15,7 +19,7 @@ they submit one. If they don't submit a topic idea then assume they would like i
 for simple marketing videos, creative social media content, educational videos, and a few that are outside the box.
 Reply with the 10 overall best ideas. Include a short, up to 2 sentence long description of each idea. Do not return all 100 ideas."""}]
 
-@retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
+@retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
 def call_openai_api(messages):
     """
     Call OpenAI's ChatCompletion API with retries for transient errors.
@@ -26,9 +30,24 @@ def call_openai_api(messages):
             messages=messages,
             max_tokens=1000  # Adjust token limit to fit your needs
         )
+        logging.info("OpenAI API call successful.")
         return response
+    except openai.error.AuthenticationError as e:
+        logging.error(f"Authentication error: {e}")
+        st.error("Invalid API key. Please check your configuration.")
+        raise
+    except openai.error.RateLimitError as e:
+        logging.error(f"Rate limit error: {e}")
+        st.error("Rate limit exceeded. Please wait and try again.")
+        raise
     except openai.error.OpenAIError as e:
-        raise RuntimeError(f"OpenAI API error: {e}")
+        logging.error(f"OpenAI API error: {e}")
+        st.error(f"OpenAI API Error: {e}")
+        raise
+    except Exception as e:
+        logging.error(f"Unexpected error: {e}")
+        st.error(f"Unexpected Error: {e}")
+        raise
 
 def CustomChatGPT(user_input, messages):
     """
@@ -60,31 +79,6 @@ if generate_button:
             reply, _ = CustomChatGPT(user_input, messages)
         st.subheader("Here are the top video ideas:")
         st.write(reply)
-    except RuntimeError as e:
-        st.error(f"Error: {e}")
     except Exception as e:
-        st.error("An unexpected error occurred. Please try again.")
-
-@retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
-def call_openai_api(messages):
-    """
-    Call OpenAI's ChatCompletion API with retries for transient errors.
-    """
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=messages,
-            max_tokens=1000  # Adjust token limit
-        )
-        return response
-    except openai.error.AuthenticationError:
-        st.error("Invalid API key. Please check your configuration.")
-        raise
-    except openai.error.RateLimitError:
-        st.error("Rate limit exceeded. Please wait and try again.")
-        raise
-    except openai.error.OpenAIError as e:
-        st.error(f"OpenAI API Error: {e}")
-        raise
-
-
+        st.error("An error occurred while generating ideas. Please try again.")
+        logging.error(f"Error during generation: {e}")
