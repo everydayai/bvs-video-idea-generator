@@ -4,7 +4,7 @@ import streamlit as st
 from tenacity import retry, wait_fixed, stop_after_attempt
 
 # Set OpenAI API key from environment variables
-openai.api_key = os.environ["OPENAI_API_KEY"]
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Define the initial system message
 initial_messages = [{"role": "system", "content": """Please act as a marketing expert for real estate agents. Your role is
@@ -17,13 +17,28 @@ Reply with the 10 overall best ideas. Include a short, up to 2 sentence long des
 
 @retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
 def call_openai_api(messages):
-    return openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=messages
-    )
+    """
+    Call OpenAI's ChatCompletion API with retries for transient errors.
+    """
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=messages,
+            max_tokens=1000  # Adjust token limit to fit your needs
+        )
+        return response
+    except openai.error.OpenAIError as e:
+        raise RuntimeError(f"OpenAI API error: {e}")
 
 def CustomChatGPT(user_input, messages):
-    messages.append({"role": "user", "content": user_input})
+    """
+    Customize ChatGPT's interaction based on user input and previous messages.
+    """
+    if user_input.strip():
+        messages.append({"role": "user", "content": user_input})
+    else:
+        messages.append({"role": "user", "content": "Please generate general video ideas for a real estate agent."})
+    
     response = call_openai_api(messages)
     ChatGPT_reply = response["choices"][0]["message"]["content"]
     messages.append({"role": "assistant", "content": ChatGPT_reply})
@@ -33,11 +48,20 @@ def CustomChatGPT(user_input, messages):
 st.title("Video Idea Generator for Real Estate Agents")
 st.write("Enter a topic suggestion or leave it blank for general video ideas.")
 
-user_input = st.text_input("Enter a topic:")
+# User input section
+user_input = st.text_input("Enter a topic:", placeholder="E.g., tips for first-time homebuyers")
 generate_button = st.button("Generate Ideas")
 
+# Generate ideas on button click
 if generate_button:
     messages = initial_messages.copy()
-    reply, _ = CustomChatGPT(user_input, messages)
-    st.write("Here are the top video ideas:")
-    st.write(reply)
+    try:
+        with st.spinner("Generating video ideas..."):
+            reply, _ = CustomChatGPT(user_input, messages)
+        st.subheader("Here are the top video ideas:")
+        st.write(reply)
+    except RuntimeError as e:
+        st.error(f"Error: {e}")
+    except Exception as e:
+        st.error("An unexpected error occurred. Please try again.")
+
