@@ -2,15 +2,11 @@ import openai
 import os
 import streamlit as st
 from tenacity import retry, wait_fixed, stop_after_attempt
-import logging
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG)
-
-# Set OpenAI API key from environment variables
+# Access OpenAI API key from environment variables
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# Define the initial system message
+# Define the initial system message (using your original prompt)
 initial_messages = [{"role": "system", "content": """Please act as a marketing expert for real estate agents. Your role is
 to generate topic summary ideas for social media videos. Follow these steps in this order:
 1. Before you execute any steps, consider the last input from the user as a suggestion for the types of topics you should create if
@@ -26,26 +22,21 @@ def call_openai_api(messages):
     """
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4",
             messages=messages,
             max_tokens=1000  # Adjust token limit to fit your needs
         )
-        logging.info("OpenAI API call successful.")
         return response
     except openai.error.AuthenticationError as e:
-        logging.error(f"Authentication error: {e}")
         st.error("Invalid API key. Please check your configuration.")
         raise
     except openai.error.RateLimitError as e:
-        logging.error(f"Rate limit error: {e}")
         st.error("Rate limit exceeded. Please wait and try again.")
         raise
     except openai.error.OpenAIError as e:
-        logging.error(f"OpenAI API error: {e}")
         st.error(f"OpenAI API Error: {e}")
         raise
     except Exception as e:
-        logging.error(f"Unexpected error: {e}")
         st.error(f"Unexpected Error: {e}")
         raise
 
@@ -65,20 +56,18 @@ def CustomChatGPT(user_input, messages):
 
 # Streamlit app setup
 st.title("Video Idea Generator for Real Estate Agents")
-st.write("Enter a topic suggestion or leave it blank for general video ideas.")
+st.subheader("Generate tailored video content ideas for your real estate marketing!")
 
-# User input section
-user_input = st.text_input("Enter a topic:", placeholder="E.g., tips for first-time homebuyers")
-generate_button = st.button("Generate Ideas")
+# User input
+user_input = st.text_input("Enter a topic suggestion (optional)", placeholder="E.g., tips for first-time homebuyers")
 
-# Generate ideas on button click
-if generate_button:
+# Button to trigger generation
+if st.button("Generate Video Ideas"):
     messages = initial_messages.copy()
     try:
         with st.spinner("Generating video ideas..."):
             reply, _ = CustomChatGPT(user_input, messages)
-        st.subheader("Here are the top video ideas:")
+        st.markdown("### Suggested Video Ideas")
         st.write(reply)
     except Exception as e:
-        st.error("An error occurred while generating ideas. Please try again.")
-        logging.error(f"Error during generation: {e}")
+        st.error(f"An error occurred: {e}")
